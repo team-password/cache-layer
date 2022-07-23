@@ -18,10 +18,10 @@
 
 # gdcache
 
-gdcache 是一个由 golang 实现的纯非侵入式缓存库，你可以用它来实现你自己的缓存。 [英文文档](https://github.com/team-password/cache-layer/blob/main/README.md)
+gdcache 是一个由 golang 实现的纯非侵入式缓存库，你可以用它来实现你自己的缓存。 [英文文档](https://github.com/team-password/cachelayer/blob/main/README.md)
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/team-password/cache-layer)](https://goreportcard.com/report/github.com/team-password/cache-layer)
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/team-password/cache-layer)](https://pkg.go.dev/github.com/team-password/cache-layer)
+[![Go Report Card](https://goreportcard.com/badge/github.com/team-password/cachelayer)](https://goreportcard.com/report/github.com/team-password/cachelayer)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/team-password/cachelayer)](https://pkg.go.dev/github.com/team-password/cachelayer)
 [![codecov](https://codecov.io/gh/ulovecode/gdcache/branch/main/graph/badge.svg?token=4GNQINA6QX)](https://codecov.io/gh/ulovecode/gdcache)
 
 ## 特性
@@ -50,7 +50,7 @@ gdcache 的核心原理是将 sql 转换成 id 缓存起来 , 并缓存 id 对�
 ## 安装
 
 ```shell
-go get github.com/team-password/cache-layer
+go get github.com/team-password/cachelayer
 ```
 
 ## 快速开始
@@ -324,4 +324,4 @@ func TestNewGormCache(t *testing.T) {
 
 © Jovanzhu, 2021~time.Now
 
-发布在 [MIT License](https://github.com/team-password/cache-layer/blob/main/LICENSE) 之下
+发布在 [MIT License](https://github.com/team-password/cachelayer/blob/main/LICENSE) 之下

@@ -1,10 +1,11 @@
 package gorm
 
 import (
-	"github.com/team-password/cache-layer"
-	"github.com/team-password/cache-layer/schemas"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+
+	"github.com/team-password/cachelayer"
+	"github.com/team-password/cachelayer/schemas"
 )
 
 // MemoryCacheHandler memory cache handler

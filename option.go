@@ -1,4 +1,4 @@
-package gdcache
+package cachelayer
 
 // Options Optional
 type Options struct {

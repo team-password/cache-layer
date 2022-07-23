@@ -2,8 +2,9 @@ package schemas
 
 import (
 	"fmt"
-	"github.com/team-password/cache-layer/tag"
 	"testing"
+
+	"github.com/team-password/cachelayer/tag"
 )
 
 func init() {

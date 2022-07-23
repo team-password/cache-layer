@@ -2,9 +2,10 @@ package builder
 
 import (
 	"fmt"
-	"github.com/team-password/cache-layer/schemas"
 	"reflect"
 	"strings"
+
+	"github.com/team-password/cachelayer/schemas"
 )
 
 // GetEntryByIdSQL Convert a single entity to the corresponding SQL

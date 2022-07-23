@@ -1,11 +1,12 @@
-package gdcache
+package cachelayer
 
 import (
 	"encoding/json"
 	"errors"
-	"github.com/team-password/cache-layer/schemas"
-	"github.com/team-password/cache-layer/tag"
 	"testing"
+
+	"github.com/team-password/cachelayer/schemas"
+	"github.com/team-password/cachelayer/tag"
 )
 
 // MemoryCacheHandler memory cache handler

@@ -3,9 +3,10 @@ package schemas
 import (
 	"errors"
 	"fmt"
-	"github.com/team-password/cache-layer/tag"
 	"reflect"
 	"strings"
+
+	"github.com/team-password/cachelayer/tag"
 )
 
 // ServiceName Service Name

@@ -1,3 +1,3 @@
-module github.com/team-password/cache-layer
+module github.com/team-password/cachelayer
 
 go 1.16

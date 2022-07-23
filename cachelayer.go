@@ -1,13 +1,14 @@
-package gdcache
+package cachelayer
 
 import (
 	"fmt"
-	"github.com/team-password/cache-layer/builder"
-	gdreflect "github.com/team-password/cache-layer/reflect"
-	"github.com/team-password/cache-layer/schemas"
-	"github.com/team-password/cache-layer/tag"
 	"reflect"
 	"strconv"
+
+	"github.com/team-password/cachelayer/builder"
+	clreflect "github.com/team-password/cachelayer/reflect"
+	"github.com/team-password/cachelayer/schemas"
+	"github.com/team-password/cachelayer/tag"
 )
 
 // ReturnKeyValue Return the key and value of the entity through the cache
@@ -174,7 +175,7 @@ func (c CacheHandler) getEntriesByPks(entrySlice interface{}, sql string, pks sc
 	}
 
 	if len(restPk) > 0 || isNoCacheSQL {
-		value := gdreflect.MakePointerSliceValue(entriesValue)
+		value := clreflect.MakePointerSliceValue(entriesValue)
 
 		if isNoCacheSQL {
 			err = c.databaseHandler.GetEntries(value.Interface(), sql)
@@ -203,10 +204,10 @@ func (c CacheHandler) getEntriesByPks(entrySlice interface{}, sql string, pks sc
 		emptySlice := value.Interface()
 
 		var res interface{}
-		if gdreflect.IsPointerElementSlice(entriesValue.Interface()) && !gdreflect.IsPointerElementSlice(emptySlice) {
-			res = gdreflect.CovertSliceStructValue2PointerValue(emptySlice)
-		} else if !gdreflect.IsPointerElementSlice(entriesValue.Interface()) && gdreflect.IsPointerElementSlice(emptySlice) {
-			res = gdreflect.CovertSlicePointerValue2StructValue(emptySlice)
+		if clreflect.IsPointerElementSlice(entriesValue.Interface()) && !clreflect.IsPointerElementSlice(emptySlice) {
+			res = clreflect.CovertSliceStructValue2PointerValue(emptySlice)
+		} else if !clreflect.IsPointerElementSlice(entriesValue.Interface()) && clreflect.IsPointerElementSlice(emptySlice) {
+			res = clreflect.CovertSlicePointerValue2StructValue(emptySlice)
 		} else {
 			res = emptySlice
 		}
@@ -336,7 +337,7 @@ func (c CacheHandler) getIdsByCacheSQL(sql string) (schemas.PK, error) {
 
 func (c CacheHandler) sort(entriesValue reflect.Value, pks schemas.PK) reflect.Value {
 	entriesValue = reflect.Indirect(entriesValue)
-	tempSliceValue := gdreflect.MakePointerSliceValue(entriesValue)
+	tempSliceValue := clreflect.MakePointerSliceValue(entriesValue)
 	set := make(map[string]reflect.Value)
 	for i := 0; i < entriesValue.Len(); i++ {
 		entry := entriesValue.Index(i).Interface()

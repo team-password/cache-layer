@@ -1,4 +1,4 @@
-package gdcache
+package cachelayer
 
 import "encoding/json"
 

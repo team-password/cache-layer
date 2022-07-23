@@ -2,8 +2,9 @@ package xorm
 
 import (
 	"github.com/go-xorm/xorm"
-	"github.com/team-password/cache-layer"
-	"github.com/team-password/cache-layer/schemas"
+
+	"github.com/team-password/cachelayer"
+	"github.com/team-password/cachelayer/schemas"
 )
 
 // MemoryCacheHandler memory cache handler
