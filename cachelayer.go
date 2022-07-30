@@ -73,25 +73,25 @@ func NewCacheHandler(cacheHandler ICache, dbHandler IDB, options ...OptionsFunc)
 }
 
 // GetEntry Get cached entity
-func (c Handler) GetEntry(entry interface{}) (bool, error) {
+func (h Handler) GetEntry(entry interface{}) (bool, error) {
 	entryKey, err := schemas.GetEntryCacheKey(entry.(schemas.IEntry))
 	if err != nil {
 		return false, err
 	}
 
-	entryValue, has, err := c.cacheHandler.Get(entryKey)
+	entryValue, has, err := h.cacheHandler.Get(entryKey)
 	if err != nil {
-		c.log.Error("Failed to get data from cache err:%v entryKey:%v", err.Error(), entryKey)
+		h.log.Error("Failed to get data from cache err:%v entryKey:%v", err.Error(), entryKey)
 	}
 	if has {
-		err = c.serializer.Deserialize(entryValue, entry)
+		err = h.serializer.Deserialize(entryValue, entry)
 	}
 	if !has {
-		has, err = c.dbHandler.GetEntry(entry)
+		has, err = h.dbHandler.GetEntry(entry)
 		if has {
 			sliceValue := reflect.MakeSlice(reflect.SliceOf(reflect.Indirect(reflect.ValueOf(entry)).Type()), 0, 0)
 			sliceValue = reflect.Append(sliceValue, reflect.Indirect(reflect.ValueOf(entry)))
-			c.storeCache(sliceValue.Interface())
+			h.storeCache(sliceValue.Interface())
 		}
 
 	}
@@ -104,7 +104,7 @@ type EntryCache struct {
 	entryKey string
 }
 
-func (c Handler) storeCache(entries interface{}) {
+func (h Handler) storeCache(entries interface{}) {
 	entryCaches := make([]EntryCache, 0)
 	entriesValue := reflect.Indirect(reflect.ValueOf(entries))
 	for i := 0; i < entriesValue.Len(); i++ {
@@ -120,17 +120,17 @@ func (c Handler) storeCache(entries interface{}) {
 
 	keyValues := make([]KV, 0)
 	for _, entryCache := range entryCaches {
-		value, err := c.serializer.Serialize(&entryCache.entry)
+		value, err := h.serializer.Serialize(&entryCache.entry)
 		if err != nil {
-			c.log.Error("Failed serialize err:%v entry:%v", err, entryCache)
+			h.log.Error("Failed serialize err:%v entry:%v", err, entryCache)
 		}
 		keyValues = append(keyValues, KV{
 			Key:   entryCache.entryKey,
 			Value: value,
 		})
 	}
-	err := c.cacheHandler.StoreAll(keyValues...)
+	err := h.cacheHandler.StoreAll(keyValues...)
 	if err != nil {
-		c.log.Error("Failed StoreAll err:%v keyValues:%v", err, keyValues)
+		h.log.Error("Failed StoreAll err:%v keyValues:%v", err, keyValues)
 	}
 }

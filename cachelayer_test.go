@@ -13,7 +13,7 @@ type MemoryCacheHandler struct {
 	data map[string][]byte
 }
 
-// StoreAll Store key value
+// StoreAll store key value
 func (m MemoryCacheHandler) StoreAll(keyValues ...KV) (err error) {
 	for _, keyValue := range keyValues {
 		m.data[keyValue.Key] = keyValue.Value
@@ -21,7 +21,7 @@ func (m MemoryCacheHandler) StoreAll(keyValues ...KV) (err error) {
 	return nil
 }
 
-// Get Get value by key
+// Get gets value by key
 func (m MemoryCacheHandler) Get(key string) (data []byte, has bool, err error) {
 	bytes, has := m.data[key]
 	return bytes, has, nil
