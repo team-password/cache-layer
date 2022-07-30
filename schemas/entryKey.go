@@ -21,8 +21,8 @@ type EntryKey struct {
 // EntryKeys Cache key array
 type EntryKeys []EntryKey
 
-// GetEntryKey Get cache key by entity name
-func (es EntryKeys) GetEntryKey(entryName string) string {
+// GetEntryCacheKey Get cache key by entity name
+func (es EntryKeys) GetEntryCacheKey(entryName string) string {
 	var (
 		keyTemplate   = make([]string, 0)
 		entryKeyNames = make([]interface{}, 0)
@@ -34,9 +34,8 @@ func (es EntryKeys) GetEntryKey(entryName string) string {
 	return fmt.Sprintf(ServiceName+"_"+entryName+"#"+strings.Join(keyTemplate, "-"), entryKeyNames...)
 }
 
-// GetEntryKey get the cache primary Name, if not, find the default value field as id
-func GetEntryKey(entry IEntry) ([]EntryKey, string, error) {
-
+// GetEntryCacheKey get the cache key by struct tag, if not set, find the field `id` or `key`
+func GetEntryCacheKey(entry IEntry) (string, error) {
 	var (
 		entryKeys  EntryKeys = make([]EntryKey, 0)
 		entryValue           = reflect.ValueOf(entry)
@@ -57,15 +56,30 @@ func GetEntryKey(entry IEntry) ([]EntryKey, string, error) {
 			}
 			return false
 		})
-		if fieldValue == reflect.ValueOf(nil) {
-			return entryKeys, "", errors.New("The field with the default value of Id was not found, and the setting cache tag was not found either ")
+		if fieldValue != reflect.ValueOf(nil) {
+			param := fieldValue.Interface()
+			entryKeys = append(entryKeys, EntryKey{
+				Name:  "id",
+				Param: fmt.Sprint(param),
+			})
+			return entryKeys.GetEntryCacheKey(entryValue.Type().String()), nil
 		}
-		param := fieldValue.Interface()
-		entryKeys = append(entryKeys, EntryKey{
-			Name:  "id",
-			Param: fmt.Sprint(param),
+		fieldValue = entryValue.FieldByNameFunc(func(fileName string) bool {
+			if strings.ToLower(fileName) == "key" {
+				return true
+			}
+			return false
 		})
-		return entryKeys, entryKeys.GetEntryKey(entryValue.Type().String()), nil
+		if fieldValue != reflect.ValueOf(nil) {
+			param := fieldValue.Interface()
+			entryKeys = append(entryKeys, EntryKey{
+				Name:  "key",
+				Param: fmt.Sprint(param),
+			})
+			return entryKeys.GetEntryCacheKey(entryValue.Type().String()), nil
+		}
+
+		return "", errors.New("the field with the default value of Id and the cache tag was not found")
 	}
 
 	for _, tagField := range tagSortFields {
@@ -75,5 +89,6 @@ func GetEntryKey(entry IEntry) ([]EntryKey, string, error) {
 			Param: fmt.Sprint(fieldValue.Interface()),
 		})
 	}
-	return entryKeys, entryKeys.GetEntryKey(entryValue.Type().String()), nil
+
+	return entryKeys.GetEntryCacheKey(entryValue.Type().String()), nil
 }

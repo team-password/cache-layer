@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/team-password/cachelayer/schemas"
-	"github.com/team-password/cachelayer/tag"
 )
 
 // MemoryCacheHandler memory cache handler
@@ -15,7 +14,7 @@ type MemoryCacheHandler struct {
 }
 
 // StoreAll Store key value
-func (m MemoryCacheHandler) StoreAll(keyValues ...KeyValue) (err error) {
+func (m MemoryCacheHandler) StoreAll(keyValues ...KV) (err error) {
 	for _, keyValue := range keyValues {
 		m.data[keyValue.Key] = keyValue.Value
 	}
@@ -29,16 +28,13 @@ func (m MemoryCacheHandler) Get(key string) (data []byte, has bool, err error) {
 }
 
 // GetAll Get values by keys
-func (m MemoryCacheHandler) GetAll(keys schemas.PK) (data []ReturnKeyValue, err error) {
-	returnKeyValues := make([]ReturnKeyValue, 0)
+func (m MemoryCacheHandler) GetAll(keys schemas.PK) (data []KV, err error) {
+	returnKeyValues := make([]KV, 0)
 	for _, key := range keys {
-		bytes, has := m.data[key]
-		returnKeyValues = append(returnKeyValues, ReturnKeyValue{
-			KeyValue: KeyValue{
-				Key:   key,
-				Value: bytes,
-			},
-			Has: has,
+		bytes, _ := m.data[key]
+		returnKeyValues = append(returnKeyValues, KV{
+			Key:   key,
+			Value: bytes,
 		})
 	}
 	return returnKeyValues, nil
@@ -117,22 +113,15 @@ func (m MemoryDb) GetEntries(entries interface{}, sql string) error {
 }
 
 // GetEntry Get entities through sql
-func (m MemoryDb) GetEntry(entry interface{}, sql string) (bool, error) {
-	if sql == "SELECT * FROM public_relation  WHERE  relateId = 1 AND sourceId = 2 AND propertyId = 3 ;" {
-		mockEntry := &MockEntry{
-			RelateId:   1,
-			SourceId:   2,
-			PropertyId: 3,
-		}
-		marshal, _ := json.Marshal(mockEntry)
-		json.Unmarshal(marshal, entry)
-		return true, nil
-	} else if sql == "SELECT COUNT(*) FROM (SELECT * FROM public_relation  WHERE  relateId = 1 AND sourceId = 2 AND propertyId = 3 ;) t" {
-		i := entry.(*int64)
-		*i = 1
-		return true, nil
+func (m MemoryDb) GetEntry(entry interface{}) (bool, error) {
+	mockEntry := &MockEntry{
+		RelateId:   1,
+		SourceId:   2,
+		PropertyId: 3,
 	}
-	return false, nil
+	marshal, _ := json.Marshal(mockEntry)
+	json.Unmarshal(marshal, entry)
+	return true, nil
 }
 
 // NewMemoryCache Create a memory cache
@@ -208,211 +197,6 @@ func TestCacheHandler_GetEntry(t *testing.T) {
 	}
 }
 
-func TestCacheHandler_GetEntries(t *testing.T) {
-	mockEntries := make([]MockEntry, 0)
-	type fields struct {
-		cacheHandler    ICache
-		databaseHandler IDB
-		serializer      Serializer
-		log             Logger
-	}
-	type args struct {
-		entrySlice interface{}
-		sql        string
-		args       []interface{}
-	}
-	memoryCacheHandler := NewMemoryCacheHandler()
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "",
-			fields: fields{
-				cacheHandler:    memoryCacheHandler,
-				databaseHandler: NewMemoryDb(),
-				serializer:      JsonSerializer{},
-				log:             DefaultLogger{},
-			},
-			args: args{
-				entrySlice: &mockEntries,
-				sql:        "SELECT * FROM public_relation  WHERE  relateId = ? AND sourceId = ? AND propertyId = ? ;",
-				args:       []interface{}{1, 2, 3},
-			},
-			wantErr: false,
-		},
-		{
-			name: "",
-			fields: fields{
-				cacheHandler:    memoryCacheHandler,
-				databaseHandler: NewMemoryDb(),
-				serializer:      JsonSerializer{},
-				log:             DefaultLogger{},
-			},
-			args: args{
-				entrySlice: &mockEntries,
-				sql:        "SELECT * FROM public_relation  WHERE  relateId = ? AND sourceId = ? AND propertyId = ? ;",
-				args:       []interface{}{1, 2, 3},
-			},
-			wantErr: false,
-		},
-		{
-			name: "",
-			fields: fields{
-				cacheHandler:    memoryCacheHandler,
-				databaseHandler: NewMemoryDb(),
-				serializer:      JsonSerializer{},
-				log:             DefaultLogger{},
-			},
-			args: args{
-				entrySlice: &mockEntries,
-				sql:        "SELECT * FROM public_relation  WHERE  relateId = ? AND sourceId = ?;",
-				args:       []interface{}{1, 2},
-			},
-			wantErr: false,
-		}, {
-			name: "restPk",
-			fields: fields{
-				cacheHandler:    memoryCacheHandler,
-				databaseHandler: NewMemoryDb(),
-				serializer:      JsonSerializer{},
-				log:             DefaultLogger{},
-			},
-			args: args{
-				entrySlice: &mockEntries,
-				sql:        "SELECT * FROM public_relation  WHERE  relateId = ? AND sourceId = ?;",
-				args:       []interface{}{1, 2},
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := CacheHandler{
-				cacheHandler:    tt.fields.cacheHandler,
-				databaseHandler: tt.fields.databaseHandler,
-				serializer:      tt.fields.serializer,
-				log:             tt.fields.log,
-			}
-			if tt.name == "restPk" {
-				println(data)
-				delete(data, "_gdcache.MockEntry#[relateId:1]-[sourceId:2]-[propertyId:4]")
-			}
-			if err := c.GetEntries(tt.args.entrySlice, tt.args.sql, tt.args.args...); (err != nil) != tt.wantErr {
-				t.Errorf("GetEntries() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestCacheHandler_GetEntriesAndCount(t *testing.T) {
-	mockEntries := make([]MockEntry, 0)
-	type fields struct {
-		cacheHandler    ICache
-		databaseHandler IDB
-		serializer      Serializer
-		log             Logger
-	}
-	type args struct {
-		entries interface{}
-		sql     string
-		args    []interface{}
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    int64
-		wantErr bool
-	}{
-		{
-			fields: fields{
-				cacheHandler:    NewMemoryCacheHandler(),
-				databaseHandler: NewMemoryDb(),
-				serializer:      JsonSerializer{},
-				log:             DefaultLogger{},
-			},
-			args: args{
-				entries: &mockEntries,
-				sql:     "SELECT * FROM public_relation  WHERE  relateId = ? AND sourceId = ? AND propertyId = ? ;",
-				args:    []interface{}{1, 2, 3},
-			},
-			want:    1,
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := CacheHandler{
-				cacheHandler:    tt.fields.cacheHandler,
-				databaseHandler: tt.fields.databaseHandler,
-				serializer:      tt.fields.serializer,
-				log:             tt.fields.log,
-			}
-			got, err := c.GetEntriesAndCount(tt.args.entries, tt.args.sql, tt.args.args...)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetEntriesAndCount() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("GetEntriesAndCount() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestCacheHandler_DelEntries(t *testing.T) {
-	mockEntries := make([]MockEntry, 0)
-	type fields struct {
-		cacheHandler    ICache
-		databaseHandler IDB
-		serializer      Serializer
-		log             Logger
-	}
-	type args struct {
-		entrySlice interface{}
-		sql        string
-		args       []interface{}
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "",
-			fields: fields{
-				cacheHandler:    NewMemoryCacheHandler(),
-				databaseHandler: NewMemoryDb(),
-				serializer:      JsonSerializer{},
-				log:             DefaultLogger{},
-			},
-			args: args{
-				entrySlice: &mockEntries,
-				sql:        "SELECT * FROM public_relation  WHERE  relateId = ? AND sourceId = ? AND propertyId = ? ;",
-				args:       []interface{}{1, 2, 3},
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := CacheHandler{
-				cacheHandler:    tt.fields.cacheHandler,
-				databaseHandler: tt.fields.databaseHandler,
-				serializer:      tt.fields.serializer,
-				log:             tt.fields.log,
-			}
-			if err := c.DelEntries(tt.args.entrySlice, tt.args.sql, tt.args.args...); (err != nil) != tt.wantErr {
-				t.Errorf("DelEntries() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
 type TestLogger struct {
 }
 
@@ -475,63 +259,6 @@ func TestNewCacheHandler(t *testing.T) {
 			if got := NewCacheHandler(tt.args.cacheHandler, tt.args.databaseHandler, tt.args.options...); !(schemas.ServiceName == "test") {
 				t.Errorf("NewCacheHandler() = %v", got)
 			}
-		})
-	}
-}
-
-func TestCacheHandler_GetEntriesByIds(t *testing.T) {
-	tag.ConfigTag("cache")
-	entries := make([]MockEntry, 0)
-	entryCondition := []MockEntry{
-		{
-			RelateId:   1,
-			SourceId:   2,
-			PropertyId: 3,
-		},
-	}
-	type fields struct {
-		cacheHandler    ICache
-		databaseHandler IDB
-		serializer      Serializer
-		log             Logger
-	}
-	type args struct {
-		entries       interface{}
-		entrySliceIds interface{}
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "",
-			fields: fields{
-				cacheHandler:    NewMemoryCacheHandler(),
-				databaseHandler: NewMemoryDb(),
-				serializer:      JsonSerializer{},
-				log:             DefaultLogger{},
-			},
-			args: args{
-				entries:       &entries,
-				entrySliceIds: entryCondition,
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := CacheHandler{
-				cacheHandler:    tt.fields.cacheHandler,
-				databaseHandler: tt.fields.databaseHandler,
-				serializer:      tt.fields.serializer,
-				log:             tt.fields.log,
-			}
-			if err := c.GetEntriesByIds(tt.args.entries, tt.args.entrySliceIds); (err != nil) != tt.wantErr {
-				t.Errorf("GetEntriesByIds() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			t.Logf("%v", entries)
 		})
 	}
 }
