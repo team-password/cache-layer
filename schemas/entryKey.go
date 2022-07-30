@@ -92,3 +92,13 @@ func GetEntryCacheKey(entry IEntry) (string, error) {
 
 	return entryKeys.GetEntryCacheKey(entryValue.Type().String()), nil
 }
+
+// GetConditionEntriesCacheKey get the cache key by struct tag, if not set, find the field `id` or `key`
+func GetConditionEntriesCacheKey(entry IEntry, condition map[string]interface{}) (string, error) {
+	tableName := entry.TableName()
+	cacheKey := ServiceName + "_" + tableName + "#"
+	for key, val := range condition {
+		cacheKey += key + ":" + fmt.Sprint(val) + "-"
+	}
+	return cacheKey, nil
+}

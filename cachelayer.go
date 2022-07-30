@@ -28,6 +28,9 @@ type IDB interface {
 	// GetEntry pass in an entity pointer, which will be used as the query condition.
 	// After the function is executed, the result of the query will be written to the entity pointed to by the pointer.
 	GetEntry(entry interface{}) (bool, error)
+	// GetEntriesByCondition pass in an entity pointer array and a map of query conditions.
+	// After the function is executed, the result of the query will be written to the entity array by the pointer array.
+	GetEntriesByCondition(entries []interface{}, condition map[string]interface{}) error
 }
 
 // IHandler handler abstraction
@@ -93,9 +96,35 @@ func (h Handler) GetEntry(entry interface{}) (bool, error) {
 			sliceValue = reflect.Append(sliceValue, reflect.Indirect(reflect.ValueOf(entry)))
 			h.storeCache(sliceValue.Interface())
 		}
-
 	}
 	return has, err
+}
+
+func (h Handler) GetEntriesByCondition(entries []interface{}, condition map[string]interface{}) error {
+	entry := entries[0]
+	entryKey, err := schemas.GetConditionEntriesCacheKey(entry.(schemas.IEntry), condition)
+	if err != nil {
+		return err
+	}
+
+	cacheValue, has, err := h.cacheHandler.Get(entryKey)
+	if err != nil {
+		h.log.Error("Failed to get data from cache err:%v entryKey:%v", err.Error(), entryKey)
+	}
+
+	if has {
+		err = h.serializer.Deserialize(cacheValue, entries)
+	}
+
+	if !has {
+		has, err = h.dbHandler.GetEntry(entry)
+		if has {
+			entries := reflect.MakeSlice(reflect.SliceOf(reflect.Indirect(reflect.ValueOf(entry)).Type()), 0, 0)
+			entries = reflect.Append(entries, reflect.Indirect(reflect.ValueOf(entry)))
+			h.storeCache(entries)
+		}
+	}
+	return err
 }
 
 // EntryCache Cache entity
