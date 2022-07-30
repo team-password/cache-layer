@@ -1,7 +1,6 @@
 package schemas
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/team-password/cachelayer/tag"
@@ -79,14 +78,10 @@ func TestGetEntryKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := GetEntryKey(tt.args.entry)
+			got1, err := GetEntryCacheKey(tt.args.entry)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetEntryKey() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-
-			if !(fmt.Sprint(got) == fmt.Sprint(tt.want)) {
-				t.Errorf("GetEntryKey() got = %v, want %v", got, tt.want)
 			}
 			if got1 != tt.want1 {
 				t.Errorf("GetEntryKey() got1 = %v, want %v", got1, tt.want1)
