@@ -30,47 +30,50 @@ type IDB interface {
 	GetEntry(entry interface{}) (bool, error)
 }
 
-// ICacheHandler Cache handler abstraction
-type ICacheHandler interface {
+// IHandler handler abstraction
+type IHandler interface {
 	// GetEntry get a pointer to an entity type and return the entity
 	GetEntry(entry interface{}) (bool, error)
 }
 
-var _ ICacheHandler = CacheHandler{}
+var _ IHandler = Handler{}
 
-// CacheHandler Default Cache handler
-type CacheHandler struct {
-	cacheHandler    ICache
-	databaseHandler IDB
-	serializer      Serializer
-	log             Logger
+// Handler Default handler
+type Handler struct {
+	cacheHandler ICache
+	dbHandler    IDB
+	serializer   Serializer
+	log          Logger
 }
 
 // NewCacheHandler Create a Cache handler
-func NewCacheHandler(cacheHandler ICache, databaseHandler IDB, options ...OptionsFunc) *CacheHandler {
+func NewCacheHandler(cacheHandler ICache, dbHandler IDB, options ...OptionsFunc) *Handler {
 	o := Options{}
 	for _, option := range options {
 		option(&o)
 	}
 
-	tag.ConfigTag(o.cacheTagName)
-	if tag.GetName() == "" {
-		tag.ConfigTag("cache")
+	if o.cacheTagName != "" {
+		tag.ConfigTag(o.cacheTagName)
 	}
-
 	if o.serializer == nil {
 		o.serializer = JsonSerializer{}
 	}
-
 	if o.log == nil {
 		o.log = DefaultLogger{}
 	}
 	schemas.ServiceName = o.serviceName
-	return &CacheHandler{cacheHandler: cacheHandler, databaseHandler: databaseHandler, serializer: o.serializer, log: o.log}
+
+	return &Handler{
+		cacheHandler: cacheHandler,
+		dbHandler:    dbHandler,
+		serializer:   o.serializer,
+		log:          o.log,
+	}
 }
 
 // GetEntry Get cached entity
-func (c CacheHandler) GetEntry(entry interface{}) (bool, error) {
+func (c Handler) GetEntry(entry interface{}) (bool, error) {
 	entryKey, err := schemas.GetEntryCacheKey(entry.(schemas.IEntry))
 	if err != nil {
 		return false, err
@@ -84,7 +87,7 @@ func (c CacheHandler) GetEntry(entry interface{}) (bool, error) {
 		err = c.serializer.Deserialize(entryValue, entry)
 	}
 	if !has {
-		has, err = c.databaseHandler.GetEntry(entry)
+		has, err = c.dbHandler.GetEntry(entry)
 		if has {
 			sliceValue := reflect.MakeSlice(reflect.SliceOf(reflect.Indirect(reflect.ValueOf(entry)).Type()), 0, 0)
 			sliceValue = reflect.Append(sliceValue, reflect.Indirect(reflect.ValueOf(entry)))
@@ -101,7 +104,7 @@ type EntryCache struct {
 	entryKey string
 }
 
-func (c CacheHandler) storeCache(entries interface{}) {
+func (c Handler) storeCache(entries interface{}) {
 	entryCaches := make([]EntryCache, 0)
 	entriesValue := reflect.Indirect(reflect.ValueOf(entries))
 	for i := 0; i < entriesValue.Len(); i++ {

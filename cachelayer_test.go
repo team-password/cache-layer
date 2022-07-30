@@ -125,7 +125,7 @@ func (m MemoryDb) GetEntry(entry interface{}) (bool, error) {
 }
 
 // NewMemoryCache Create a memory cache
-func NewMemoryCache() *CacheHandler {
+func NewMemoryCache() *Handler {
 	return NewCacheHandler(NewMemoryCacheHandler(), NewMemoryDb())
 }
 
@@ -179,11 +179,11 @@ func TestCacheHandler_GetEntry(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := CacheHandler{
-				cacheHandler:    tt.fields.cacheHandler,
-				databaseHandler: tt.fields.databaseHandler,
-				serializer:      tt.fields.serializer,
-				log:             tt.fields.log,
+			c := Handler{
+				cacheHandler: tt.fields.cacheHandler,
+				dbHandler:    tt.fields.databaseHandler,
+				serializer:   tt.fields.serializer,
+				log:          tt.fields.log,
 			}
 			got, err := c.GetEntry(tt.args.entry)
 			if (err != nil) != tt.wantErr {
