@@ -12,6 +12,11 @@ import (
 // ServiceName Service Name
 var ServiceName string
 
+// IEntry Abstract entity type
+type IEntry interface {
+	TableName() string
+}
+
 // EntryKey Cache key
 type EntryKey struct {
 	Name  string

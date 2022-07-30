@@ -2,7 +2,6 @@ package cachelayer
 
 import (
 	"encoding/json"
-	"errors"
 	"testing"
 
 	"github.com/team-password/cachelayer/schemas"
@@ -27,27 +26,6 @@ func (m MemoryCacheHandler) Get(key string) (data []byte, has bool, err error) {
 	return bytes, has, nil
 }
 
-// GetAll Get values by keys
-func (m MemoryCacheHandler) GetAll(keys schemas.PK) (data []KV, err error) {
-	returnKeyValues := make([]KV, 0)
-	for _, key := range keys {
-		bytes, _ := m.data[key]
-		returnKeyValues = append(returnKeyValues, KV{
-			Key:   key,
-			Value: bytes,
-		})
-	}
-	return returnKeyValues, nil
-}
-
-// DeleteAll Delete all key caches
-func (m MemoryCacheHandler) DeleteAll(keys schemas.PK) error {
-	for _, k := range keys {
-		delete(m.data, k)
-	}
-	return nil
-}
-
 var data = make(map[string][]byte, 0)
 
 // NewMemoryCacheHandler Create a cache handler
@@ -64,52 +42,6 @@ type MemoryDb struct {
 // NewMemoryDb Create Memory Database
 func NewMemoryDb() *MemoryDb {
 	return &MemoryDb{}
-}
-
-// GetEntries Get the list of entities through sql
-func (m MemoryDb) GetEntries(entries interface{}, sql string) error {
-	if sql == "SELECT * FROM public_relation  WHERE  relateId = 1 AND sourceId = 2 AND propertyId = 3 ;" || sql == "SELECT * FROM public_relation  WHERE (  relateId = 1 AND sourceId = 2 AND propertyId = 3  );" {
-		mockEntries := make([]MockEntry, 0)
-		mockEntries = append(mockEntries, MockEntry{
-			RelateId:   1,
-			SourceId:   2,
-			PropertyId: 3,
-		})
-		marshal, _ := json.Marshal(mockEntries)
-		json.Unmarshal(marshal, entries)
-		return nil
-	} else if sql == "SELECT * FROM public_relation  WHERE  relateId = 1 AND sourceId = 2;" {
-		mockEntries := make([]*MockEntry, 0)
-		mockEntries = append(mockEntries, &MockEntry{
-			RelateId:   1,
-			SourceId:   2,
-			PropertyId: 3,
-		})
-		mockEntries = append(mockEntries, &MockEntry{
-			RelateId:   1,
-			SourceId:   2,
-			PropertyId: 4,
-		})
-		marshal, _ := json.Marshal(mockEntries)
-		json.Unmarshal(marshal, entries)
-		return nil
-	} else if sql == "SELECT * FROM public_relation  WHERE (  relateId = 1 AND sourceId = 2 AND propertyId = 3  ) OR (  relateId = 1 AND sourceId = 2 AND propertyId = 4  );" {
-		mockEntries := make([]MockEntry, 0)
-		mockEntries = append(mockEntries, MockEntry{
-			RelateId:   1,
-			SourceId:   2,
-			PropertyId: 3,
-		})
-		mockEntries = append(mockEntries, MockEntry{
-			RelateId:   1,
-			SourceId:   2,
-			PropertyId: 4,
-		})
-		marshal, _ := json.Marshal(mockEntries)
-		json.Unmarshal(marshal, entries)
-		return nil
-	}
-	return errors.New("mockEntries not found")
 }
 
 // GetEntry Get entities through sql
